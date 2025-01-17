@@ -44,11 +44,21 @@ export const Schedule: React.FC = () => {
     if (!element) return;
 
     const opt = {
-      margin: 1,
+      margin: 0.5,
       filename: `escala-${date.toLocaleDateString()}.pdf`,
       image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: "in", format: "letter", orientation: "landscape" },
+      html2canvas: { 
+        scale: 1,
+        letterRendering: true,
+        useCORS: true
+      },
+      jsPDF: { 
+        unit: "in", 
+        format: "a4", 
+        orientation: "landscape",
+        compress: true,
+        hotfixes: ["px_scaling"]
+      }
     };
 
     html2pdf().set(opt).from(element).save();
