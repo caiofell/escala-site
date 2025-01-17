@@ -188,7 +188,17 @@ export const Schedule: React.FC = () => {
 
           <div className="flex-1">
             {!showNewEmployeeInput ? (
-              <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+              <Select 
+                value={selectedEmployee} 
+                onValueChange={(value) => {
+                  if (value === "new") {
+                    setShowNewEmployeeInput(true);
+                    setSelectedEmployee("");
+                  } else {
+                    setSelectedEmployee(value);
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o funcionário" />
                 </SelectTrigger>
@@ -202,12 +212,23 @@ export const Schedule: React.FC = () => {
                 </SelectContent>
               </Select>
             ) : (
-              <input
-                className="w-full px-3 py-2 border rounded-md"
-                placeholder="Nome do novo funcionário"
-                value={newEmployeeName}
-                onChange={(e) => setNewEmployeeName(e.target.value)}
-              />
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 px-3 py-2 border rounded-md"
+                  placeholder="Nome do novo funcionário"
+                  value={newEmployeeName}
+                  onChange={(e) => setNewEmployeeName(e.target.value)}
+                />
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowNewEmployeeInput(false);
+                    setNewEmployeeName("");
+                  }}
+                >
+                  Cancelar
+                </Button>
+              </div>
             )}
           </div>
           <Button onClick={addEmployee}>Adicionar Funcionário</Button>
@@ -218,7 +239,7 @@ export const Schedule: React.FC = () => {
         <table id="schedule-table" className="w-full border-collapse border border-gray-300 text-sm">
           <thead>
             <tr>
-              <th colSpan={4} className="bg-navy text-white p-1 text-center border border-gray-300">
+              <th colSpan={4} className="bg-navy text-white p-1 text-center border border-gray-300 text-xs">
                 {date.toLocaleDateString()}
               </th>
             </tr>
@@ -226,7 +247,7 @@ export const Schedule: React.FC = () => {
           <tbody>
             {STATIONS.map((station) => (
               <tr key={station}>
-                <td className="bg-navy text-white p-1 border border-gray-300 w-1/5">
+                <td className="bg-navy text-white p-1 border border-gray-300 w-1/5 text-xs">
                   {station}
                 </td>
                 {SHIFT_TIMES[station].map((time, timeIndex) => {
@@ -252,7 +273,7 @@ export const Schedule: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="mt-1"
+                            className="mt-1 text-xs"
                             onClick={() => removeEmployee(schedule.indexOf(shift))}
                           >
                             Remover
@@ -267,7 +288,7 @@ export const Schedule: React.FC = () => {
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={4} className="p-1 border border-gray-300 text-center text-xs">
+              <td colSpan={4} className="p-1 border border-gray-300 text-center text-[10px]">
                 TODOS MAQUEIROS SÃO COBERTURA E ATENDEM CONFORME NECESSIDADE DO SETOR, PORTANDO DEVE-SE
                 UTILIZAR EM TODOS OS LOCAIS O RÁDIO COMUNICADOR.
               </td>
