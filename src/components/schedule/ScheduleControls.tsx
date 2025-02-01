@@ -7,11 +7,13 @@ import html2pdf from "html2pdf.js";
 interface ScheduleControlsProps {
   onGenerateSchedule: () => void;
   date: Date;
+  canGenerateSchedule: boolean;
 }
 
 export const ScheduleControls: React.FC<ScheduleControlsProps> = ({
   onGenerateSchedule,
   date,
+  canGenerateSchedule,
 }) => {
   const handleExportPDF = () => {
     const element = document.getElementById("schedule-table");
@@ -41,7 +43,12 @@ export const ScheduleControls: React.FC<ScheduleControlsProps> = ({
 
   return (
     <div className="flex justify-between items-center">
-      <Button onClick={onGenerateSchedule}>Gerar Nova Escala</Button>
+      <Button 
+        onClick={onGenerateSchedule} 
+        disabled={!canGenerateSchedule}
+      >
+        {canGenerateSchedule ? "Gerar Nova Escala" : "Escala já gerada hoje"}
+      </Button>
       <Button onClick={handleExportPDF} variant="outline">
         <Download className="mr-2 h-4 w-4" />
         Exportar PDF

@@ -8,21 +8,6 @@ export const STATIONS = [
   "COBERTURA",
 ] as const;
 
-export const EMPLOYEES: Employee[] = [
-  { id: "1", name: "ERICA" },
-  { id: "2", name: "SILVANI" },
-  { id: "3", name: "MAXWELL" },
-  { id: "4", name: "JOÃO PAULO" },
-  { id: "5", name: "VIVIANE" },
-  { id: "6", name: "DANIEL OLIVEIRA" },
-  { id: "7", name: "ROMARIO" },
-  { id: "8", name: "EDILSON" },
-  { id: "9", name: "JOSIANE" },
-  { id: "10", name: "JANAINA" },
-  { id: "11", name: "CARLOS JUNIOR" },
-  { id: "12", name: "DANIEL VITOR" },
-];
-
 export const SHIFT_TIMES: Record<string, ShiftTime[]> = {
   "EMERGÊNCIA": [
     { meal: "21:00", interval: "00:00 AS 02:00" },
@@ -47,8 +32,8 @@ export const SHIFT_TIMES: Record<string, ShiftTime[]> = {
   ],
 };
 
-export function generateSchedule(previousSchedule?: StationShift[]): StationShift[] {
-  const availableEmployees = [...EMPLOYEES];
+export function generateSchedule(employees: Employee[], previousSchedule?: StationShift[]): StationShift[] {
+  const availableEmployees = [...employees];
   const schedule: StationShift[] = [];
 
   STATIONS.forEach((station) => {
@@ -56,7 +41,6 @@ export function generateSchedule(previousSchedule?: StationShift[]): StationShif
     stationTimes.forEach((shiftTime) => {
       if (availableEmployees.length === 0) return;
 
-      // Get random employee that wasn't in the same position last time
       const validEmployees = availableEmployees.filter((emp) => {
         if (!previousSchedule) return true;
         const prevShift = previousSchedule.find(
