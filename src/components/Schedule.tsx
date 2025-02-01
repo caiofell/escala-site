@@ -1,122 +1,40 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { StationShift, Employee } from "@/types/schedule";
 import { generateSchedule, STATIONS, SHIFT_TIMES } from "@/utils/scheduleUtils";
 import { toast } from "sonner";
 import { ScheduleControls } from "./schedule/ScheduleControls";
 import { EmployeeForm } from "./schedule/EmployeeForm";
 import { ScheduleTable } from "./schedule/ScheduleTable";
-import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import { useScheduleManagement } from "@/hooks/useScheduleManagement";
+import { useEmployeeManagement } from "@/hooks/useEmployeeManagement";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Schedule: React.FC = () => {
-  const [schedule, setSchedule] = useState<StationShift[]>([]);
   const [date] = useState(new Date());
-  const [selectedStation, setSelectedStation] = useState<string>("");
-  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
-  const [selectedShiftTime, setSelectedShiftTime] = useState<string>("");
-  const [newEmployeeName, setNewEmployeeName] = useState("");
-  const [showNewEmployeeInput, setShowNewEmployeeInput] = useState(false);
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [canGenerateSchedule, setCanGenerateSchedule] = useState(true);
+  const {
+    schedule,
+    setSchedule,
+    canGenerateSchedule,
+    isAdmin,
+    logSchedule,
+    handleGenerateSchedule
+  } = useScheduleManagement();
 
-  useEffect(() => {
-    fetchEmployees();
-    checkDailySchedule();
-    fetchTodaySchedule();
-  }, []);
-
-  const fetchEmployees = async () => {
-    const { data, error } = await supabase
-      .from("employees")
-      .select("*")
-      .eq("active", true)
-      .order("name");
-
-    if (error) {
-      toast.error("Erro ao carregar funcionários");
-      return;
-    }
-
-    setEmployees(data || []);
-  };
-
-  const checkDailySchedule = async () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const { data, error } = await supabase
-      .from("daily_schedule")
-      .select("*")
-      .gte("created_at", today.toISOString())
-      .lt("created_at", new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString());
-
-    if (error) {
-      toast.error("Erro ao verificar escala do dia");
-      return;
-    }
-
-    setCanGenerateSchedule(!data || data.length === 0);
-  };
-
-  const fetchTodaySchedule = async () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const { data: scheduleData } = await supabase
-      .from("schedule_logs")
-      .select("*")
-      .gte("created_at", today.toISOString())
-      .lt("created_at", new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString());
-
-    if (scheduleData && scheduleData.length > 0) {
-      const formattedSchedule = scheduleData.map(log => ({
-        station: log.station,
-        employee: { id: "", name: log.employee_name },
-        shiftTime: { meal: log.meal_time, interval: log.interval_time },
-      }));
-      setSchedule(formattedSchedule);
-    }
-  };
-
-  const logSchedule = async (scheduleData: StationShift[]) => {
-    const logs = scheduleData.map((shift) => ({
-      station: shift.station,
-      employee_name: shift.employee?.name || "",
-      meal_time: shift.shiftTime.meal,
-      interval_time: shift.shiftTime.interval,
-    }));
-
-    const { error: logsError } = await supabase.from("schedule_logs").insert(logs);
-    
-    if (logsError) {
-      console.error("Error logging schedule:", logsError);
-      toast.error("Erro ao salvar o log da escala");
-      return;
-    }
-
-    const { error: scheduleError } = await supabase.from("daily_schedule").insert([
-      { created_by: (await supabase.auth.getUser()).data.user?.email }
-    ]);
-
-    if (scheduleError) {
-      console.error("Error creating daily schedule:", scheduleError);
-      toast.error("Erro ao criar escala diária");
-      return;
-    }
-  };
-
-  const handleGenerateSchedule = async () => {
-    if (!canGenerateSchedule) {
-      toast.error("Já existe uma escala gerada para hoje");
-      return;
-    }
-
-    const newSchedule = generateSchedule(employees, schedule);
-    setSchedule(newSchedule);
-    await logSchedule(newSchedule);
-    setCanGenerateSchedule(false);
-    toast.success("Nova escala gerada com sucesso!");
-  };
+  const {
+    employees,
+    showNewEmployeeInput,
+    newEmployeeName,
+    selectedStation,
+    selectedEmployee,
+    selectedShiftTime,
+    setShowNewEmployeeInput,
+    setNewEmployeeName,
+    setSelectedStation,
+    setSelectedEmployee,
+    setSelectedShiftTime,
+    resetForm
+  } = useEmployeeManagement();
 
   const removeEmployee = (stationIndex: number) => {
     const newSchedule = [...schedule];
@@ -189,11 +107,7 @@ export const Schedule: React.FC = () => {
     setSchedule(newSchedule);
     await logSchedule([newShift]);
     
-    setSelectedStation("");
-    setSelectedEmployee("");
-    setSelectedShiftTime("");
-    setNewEmployeeName("");
-    setShowNewEmployeeInput(false);
+    resetForm();
     toast.success("Funcionário adicionado com sucesso!");
   };
 
@@ -219,9 +133,10 @@ export const Schedule: React.FC = () => {
 
       <div className="flex flex-col gap-4 mb-6">
         <ScheduleControls
-          onGenerateSchedule={handleGenerateSchedule}
+          onGenerateSchedule={() => handleGenerateSchedule(employees)}
           date={date}
           canGenerateSchedule={canGenerateSchedule}
+          isAdmin={isAdmin}
         />
 
         <EmployeeForm

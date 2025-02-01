@@ -8,12 +8,14 @@ interface ScheduleControlsProps {
   onGenerateSchedule: () => void;
   date: Date;
   canGenerateSchedule: boolean;
+  isAdmin: boolean;
 }
 
 export const ScheduleControls: React.FC<ScheduleControlsProps> = ({
   onGenerateSchedule,
   date,
   canGenerateSchedule,
+  isAdmin,
 }) => {
   const handleExportPDF = () => {
     const element = document.getElementById("schedule-table");
@@ -45,9 +47,11 @@ export const ScheduleControls: React.FC<ScheduleControlsProps> = ({
     <div className="flex justify-between items-center">
       <Button 
         onClick={onGenerateSchedule} 
-        disabled={!canGenerateSchedule}
+        disabled={!canGenerateSchedule || !isAdmin}
       >
-        {canGenerateSchedule ? "Gerar Nova Escala" : "Escala já gerada hoje"}
+        {!isAdmin ? "Apenas administrador pode gerar escala" : 
+         !canGenerateSchedule ? "Escala já gerada hoje" : 
+         "Gerar Nova Escala"}
       </Button>
       <Button onClick={handleExportPDF} variant="outline">
         <Download className="mr-2 h-4 w-4" />
