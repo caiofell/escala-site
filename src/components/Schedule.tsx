@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { ScheduleControls } from "./schedule/ScheduleControls";
 import { EmployeeForm } from "./schedule/EmployeeForm";
 import { ScheduleTable } from "./schedule/ScheduleTable";
+import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 export const Schedule: React.FC = () => {
   const [schedule, setSchedule] = useState<StationShift[]>([]);
@@ -15,9 +17,27 @@ export const Schedule: React.FC = () => {
   const [newEmployeeName, setNewEmployeeName] = useState("");
   const [showNewEmployeeInput, setShowNewEmployeeInput] = useState(false);
 
-  const handleGenerateSchedule = () => {
+  const logSchedule = async (scheduleData: StationShift[]) => {
+    const logs = scheduleData.map((shift) => ({
+      station: shift.station,
+      employee_name: shift.employee?.name || "",
+      meal_time: shift.shiftTime.meal,
+      interval_time: shift.shiftTime.interval,
+    }));
+
+    const { error } = await supabase.from("schedule_logs").insert(logs);
+    
+    if (error) {
+      console.error("Error logging schedule:", error);
+      toast.error("Erro ao salvar o log da escala");
+      return;
+    }
+  };
+
+  const handleGenerateSchedule = async () => {
     const newSchedule = generateSchedule(schedule);
     setSchedule(newSchedule);
+    await logSchedule(newSchedule);
     toast.success("Nova escala gerada com sucesso!");
   };
 
@@ -44,7 +64,7 @@ export const Schedule: React.FC = () => {
     );
   };
 
-  const addEmployee = () => {
+  const addEmployee = async () => {
     if (!selectedStation || (!selectedEmployee && !newEmployeeName) || !selectedShiftTime) {
       toast.error("Por favor, preencha todos os campos necessários");
       return;
@@ -81,7 +101,10 @@ export const Schedule: React.FC = () => {
       shiftTime,
     };
 
-    setSchedule([...schedule, newShift]);
+    const newSchedule = [...schedule, newShift];
+    setSchedule(newSchedule);
+    await logSchedule([newShift]);
+    
     setSelectedStation("");
     setSelectedEmployee("");
     setSelectedShiftTime("");
@@ -92,6 +115,16 @@ export const Schedule: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Escala de Maqueiros</h1>
+        <Link 
+          to="/logs" 
+          className="text-navy hover:text-navy/80 underline"
+        >
+          Ver Histórico
+        </Link>
+      </div>
+
       <div className="flex flex-col gap-4 mb-6">
         <ScheduleControls
           onGenerateSchedule={handleGenerateSchedule}
