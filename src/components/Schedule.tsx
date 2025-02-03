@@ -15,7 +15,6 @@ export const Schedule: React.FC = () => {
   const {
     schedule,
     setSchedule,
-    canGenerateSchedule,
     logSchedule,
     handleGenerateSchedule
   } = useScheduleManagement();
@@ -134,7 +133,6 @@ export const Schedule: React.FC = () => {
         <ScheduleControls
           onGenerateSchedule={() => handleGenerateSchedule(employees)}
           date={date}
-          canGenerateSchedule={canGenerateSchedule}
         />
 
         <EmployeeForm
