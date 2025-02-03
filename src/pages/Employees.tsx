@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { UserCheck, UserX } from "lucide-react";
 
 interface Employee {
   id: string;
@@ -62,7 +63,7 @@ const Employees = () => {
       return;
     }
 
-    toast.success("Status atualizado com sucesso!");
+    toast.success(`Funcionário ${!employee.active ? 'ativado' : 'desativado'} com sucesso!`);
     fetchEmployees();
   };
 
@@ -91,12 +92,24 @@ const Employees = () => {
             key={employee.id}
             className="flex justify-between items-center p-4 bg-white rounded-lg shadow"
           >
-            <span className="font-medium">{employee.name}</span>
+            <span className={`font-medium ${!employee.active ? 'text-gray-400' : ''}`}>
+              {employee.name}
+            </span>
             <Button
               variant={employee.active ? "destructive" : "default"}
               onClick={() => toggleEmployeeStatus(employee)}
             >
-              {employee.active ? "Desativar" : "Ativar"}
+              {employee.active ? (
+                <>
+                  <UserX className="mr-2" />
+                  Desativar
+                </>
+              ) : (
+                <>
+                  <UserCheck className="mr-2" />
+                  Ativar
+                </>
+              )}
             </Button>
           </div>
         ))}
