@@ -7,18 +7,11 @@ import { generateSchedule } from "@/utils/scheduleUtils";
 export const useScheduleManagement = () => {
   const [schedule, setSchedule] = useState<StationShift[]>([]);
   const [canGenerateSchedule, setCanGenerateSchedule] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    checkUserRole();
     checkDailySchedule();
     fetchTodaySchedule();
   }, []);
-
-  const checkUserRole = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setIsAdmin(user?.email === "caiofell.d.s@gmail.com");
-  };
 
   const checkDailySchedule = async () => {
     const today = new Date();
@@ -91,11 +84,6 @@ export const useScheduleManagement = () => {
       return;
     }
 
-    if (!isAdmin) {
-      toast.error("Apenas o administrador pode gerar uma nova escala");
-      return;
-    }
-
     const newSchedule = generateSchedule(employees, schedule);
     setSchedule(newSchedule);
     await logSchedule(newSchedule);
@@ -107,7 +95,6 @@ export const useScheduleManagement = () => {
     schedule,
     setSchedule,
     canGenerateSchedule,
-    isAdmin,
     logSchedule,
     handleGenerateSchedule
   };

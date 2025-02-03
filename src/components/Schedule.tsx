@@ -16,7 +16,6 @@ export const Schedule: React.FC = () => {
     schedule,
     setSchedule,
     canGenerateSchedule,
-    isAdmin,
     logSchedule,
     handleGenerateSchedule
   } = useScheduleManagement();
@@ -45,7 +44,7 @@ export const Schedule: React.FC = () => {
 
   const getAvailableEmployees = () => {
     const scheduledEmployeeIds = schedule.map(s => s.employee?.id).filter(Boolean);
-    return employees.filter(emp => !scheduledEmployeeIds.includes(emp.id));
+    return employees.filter(emp => !scheduledEmployeeIds.includes(emp.id) && emp.active);
   };
 
   const getAvailableShiftTimes = (station: string) => {
@@ -136,7 +135,6 @@ export const Schedule: React.FC = () => {
           onGenerateSchedule={() => handleGenerateSchedule(employees)}
           date={date}
           canGenerateSchedule={canGenerateSchedule}
-          isAdmin={isAdmin}
         />
 
         <EmployeeForm

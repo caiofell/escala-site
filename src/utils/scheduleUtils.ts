@@ -1,4 +1,4 @@
-import { Employee, ShiftTime, StationShift } from "@/types/schedule";
+import { Employee, StationShift } from "@/types/schedule";
 
 export const STATIONS = [
   "EMERGÊNCIA",
@@ -8,7 +8,7 @@ export const STATIONS = [
   "COBERTURA",
 ] as const;
 
-export const SHIFT_TIMES: Record<string, ShiftTime[]> = {
+export const SHIFT_TIMES: Record<string, { meal: string; interval: string }[]> = {
   "EMERGÊNCIA": [
     { meal: "21:00", interval: "00:00 AS 02:00" },
     { meal: "21:30", interval: "02:00 AS 04:00" },
@@ -33,40 +33,47 @@ export const SHIFT_TIMES: Record<string, ShiftTime[]> = {
 };
 
 export function generateSchedule(employees: Employee[], previousSchedule?: StationShift[]): StationShift[] {
-  const availableEmployees = [...employees];
+  const availableEmployees = [...employees].filter(emp => emp.active);
   const schedule: StationShift[] = [];
 
-  STATIONS.forEach((station) => {
-    const stationTimes = SHIFT_TIMES[station];
-    stationTimes.forEach((shiftTime) => {
-      if (availableEmployees.length === 0) return;
+  // Primeiro, preencher todos os postos exceto COBERTURA
+  STATIONS.forEach(station => {
+    if (station !== "COBERTURA") {
+      const stationTimes = SHIFT_TIMES[station];
+      stationTimes.forEach(shiftTime => {
+        if (availableEmployees.length === 0) return;
 
-      const validEmployees = availableEmployees.filter((emp) => {
-        if (!previousSchedule) return true;
-        const prevShift = previousSchedule.find(
-          (shift) =>
-            shift.employee?.id === emp.id &&
-            (shift.station === station || shift.shiftTime.meal === shiftTime.meal)
-        );
-        return !prevShift;
+        const randomIndex = Math.floor(Math.random() * availableEmployees.length);
+        const employee = availableEmployees[randomIndex];
+        
+        schedule.push({
+          station,
+          employee,
+          shiftTime,
+        });
+        
+        availableEmployees.splice(randomIndex, 1);
       });
-
-      if (validEmployees.length === 0) return;
-
-      const randomIndex = Math.floor(Math.random() * validEmployees.length);
-      const employee = validEmployees[randomIndex];
-      const employeeIndex = availableEmployees.findIndex(
-        (emp) => emp.id === employee.id
-      );
-      availableEmployees.splice(employeeIndex, 1);
-
-      schedule.push({
-        station,
-        employee,
-        shiftTime,
-      });
-    });
+    }
   });
+
+  // Depois, distribuir os funcionários restantes na COBERTURA
+  while (availableEmployees.length > 0) {
+    const shiftTimes = SHIFT_TIMES["COBERTURA"];
+    const randomShiftIndex = Math.floor(Math.random() * shiftTimes.length);
+    const shiftTime = shiftTimes[randomShiftIndex];
+    
+    const randomEmployeeIndex = Math.floor(Math.random() * availableEmployees.length);
+    const employee = availableEmployees[randomEmployeeIndex];
+    
+    schedule.push({
+      station: "COBERTURA",
+      employee,
+      shiftTime,
+    });
+    
+    availableEmployees.splice(randomEmployeeIndex, 1);
+  }
 
   return schedule;
 }
