@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
@@ -7,11 +8,13 @@ import html2pdf from "html2pdf.js";
 interface ScheduleControlsProps {
   onGenerateSchedule: () => void;
   date: Date;
+  loading: boolean;
 }
 
 export const ScheduleControls: React.FC<ScheduleControlsProps> = ({
   onGenerateSchedule,
   date,
+  loading
 }) => {
   const handleExportPDF = () => {
     const element = document.getElementById("schedule-table");
@@ -41,10 +44,10 @@ export const ScheduleControls: React.FC<ScheduleControlsProps> = ({
 
   return (
     <div className="flex justify-between items-center">
-      <Button onClick={onGenerateSchedule}>
-        Gerar Nova Escala
+      <Button onClick={onGenerateSchedule} disabled={loading}>
+        {loading ? "Gerando..." : "Gerar Nova Escala"}
       </Button>
-      <Button onClick={handleExportPDF} variant="outline">
+      <Button onClick={handleExportPDF} variant="outline" disabled={loading}>
         <Download className="mr-2 h-4 w-4" />
         Exportar PDF
       </Button>
