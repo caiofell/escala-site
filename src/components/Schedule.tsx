@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { StationShift } from "@/types/schedule";
 import { STATIONS, SHIFT_TIMES } from "@/utils/scheduleUtils";
@@ -13,6 +14,7 @@ export const Schedule: React.FC = () => {
   const [date] = useState(new Date());
   const {
     schedule,
+    loading: scheduleLoading,
     setSchedule,
     logSchedule,
     handleGenerateSchedule
@@ -20,6 +22,7 @@ export const Schedule: React.FC = () => {
 
   const {
     employees,
+    loading: employeesLoading,
     showNewEmployeeInput,
     newEmployeeName,
     selectedStation,
@@ -40,6 +43,10 @@ export const Schedule: React.FC = () => {
     addEmployee
   } = useEmployeeActions(schedule, setSchedule, logSchedule);
 
+  if (employeesLoading) {
+    return <div className="p-4">Carregando funcionários...</div>;
+  }
+
   return (
     <div className="container mx-auto p-4">
       <ScheduleHeader />
@@ -48,6 +55,7 @@ export const Schedule: React.FC = () => {
         <ScheduleControls
           onGenerateSchedule={() => handleGenerateSchedule(employees)}
           date={date}
+          loading={scheduleLoading}
         />
 
         <EmployeeForm

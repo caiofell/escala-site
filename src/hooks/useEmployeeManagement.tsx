@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Employee } from "@/types/schedule";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,24 +11,34 @@ export const useEmployeeManagement = () => {
   const [selectedStation, setSelectedStation] = useState<string>("");
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [selectedShiftTime, setSelectedShiftTime] = useState<string>("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchEmployees();
   }, []);
 
   const fetchEmployees = async () => {
-    const { data, error } = await supabase
-      .from("employees")
-      .select("*")
-      .eq("active", true)
-      .order("name");
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("employees")
+        .select("*")
+        .eq("active", true)
+        .order("name");
 
-    if (error) {
+      if (error) {
+        console.error("Erro ao buscar funcionários:", error);
+        toast.error("Erro ao carregar funcionários");
+        return;
+      }
+
+      setEmployees(data || []);
+    } catch (err) {
+      console.error("Erro inesperado:", err);
       toast.error("Erro ao carregar funcionários");
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    setEmployees(data || []);
   };
 
   const resetForm = () => {
@@ -45,6 +56,7 @@ export const useEmployeeManagement = () => {
     selectedStation,
     selectedEmployee,
     selectedShiftTime,
+    loading,
     setShowNewEmployeeInput,
     setNewEmployeeName,
     setSelectedStation,
