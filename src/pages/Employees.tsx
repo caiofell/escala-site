@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,56 +16,87 @@ interface Employee {
 const Employees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [newEmployeeName, setNewEmployeeName] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchEmployees();
   }, []);
 
   const fetchEmployees = async () => {
-    const { data, error } = await supabase
-      .from("employees")
-      .select("*")
-      .order("name");
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("employees")
+        .select("*")
+        .order("name");
 
-    if (error) {
+      if (error) {
+        console.error("Error fetching employees:", error);
+        toast.error("Erro ao carregar funcionários");
+        return;
+      }
+
+      setEmployees(data || []);
+    } catch (err) {
+      console.error("Unexpected error:", err);
       toast.error("Erro ao carregar funcionários");
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    setEmployees(data || []);
   };
 
   const addEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEmployeeName.trim()) return;
 
-    const { error } = await supabase
-      .from("employees")
-      .insert([{ name: newEmployeeName.toUpperCase() }]);
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from("employees")
+        .insert([{ 
+          name: newEmployeeName.trim().toUpperCase(),
+          active: true
+        }]);
 
-    if (error) {
+      if (error) {
+        console.error("Error adding employee:", error);
+        toast.error("Erro ao adicionar funcionário");
+        return;
+      }
+
+      toast.success("Funcionário adicionado com sucesso!");
+      setNewEmployeeName("");
+      await fetchEmployees();
+    } catch (err) {
+      console.error("Unexpected error:", err);
       toast.error("Erro ao adicionar funcionário");
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    toast.success("Funcionário adicionado com sucesso!");
-    setNewEmployeeName("");
-    fetchEmployees();
   };
 
   const toggleEmployeeStatus = async (employee: Employee) => {
-    const { error } = await supabase
-      .from("employees")
-      .update({ active: !employee.active })
-      .eq("id", employee.id);
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from("employees")
+        .update({ active: !employee.active })
+        .eq("id", employee.id);
 
-    if (error) {
+      if (error) {
+        console.error("Error updating employee status:", error);
+        toast.error("Erro ao atualizar status do funcionário");
+        return;
+      }
+
+      toast.success(`Funcionário ${!employee.active ? 'ativado' : 'desativado'} com sucesso!`);
+      await fetchEmployees();
+    } catch (err) {
+      console.error("Unexpected error:", err);
       toast.error("Erro ao atualizar status do funcionário");
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    toast.success(`Funcionário ${!employee.active ? 'ativado' : 'desativado'} com sucesso!`);
-    fetchEmployees();
   };
 
   return (
@@ -82,8 +114,11 @@ const Employees = () => {
           onChange={(e) => setNewEmployeeName(e.target.value)}
           placeholder="Nome do novo funcionário"
           className="flex-1"
+          disabled={loading}
         />
-        <Button type="submit">Adicionar</Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? "Adicionando..." : "Adicionar"}
+        </Button>
       </form>
 
       <div className="space-y-4">
@@ -98,6 +133,7 @@ const Employees = () => {
             <Button
               variant={employee.active ? "destructive" : "default"}
               onClick={() => toggleEmployeeStatus(employee)}
+              disabled={loading}
             >
               {employee.active ? (
                 <>
