@@ -1,3 +1,4 @@
+
 import { Employee, StationShift } from "@/types/schedule";
 
 export const STATIONS = [
@@ -58,10 +59,13 @@ export function generateSchedule(employees: Employee[], previousSchedule?: Stati
   });
 
   // Depois, distribuir os funcionários restantes na COBERTURA
+  // Criando um sistema de rotação para os horários de intervalo e jantar
+  const coverageShiftTimes = SHIFT_TIMES["COBERTURA"];
+  let shiftIndex = 0;
+  
   while (availableEmployees.length > 0) {
-    const shiftTimes = SHIFT_TIMES["COBERTURA"];
-    const randomShiftIndex = Math.floor(Math.random() * shiftTimes.length);
-    const shiftTime = shiftTimes[randomShiftIndex];
+    // Obtém o próximo horário de intervalo/jantar na sequência, com rotação
+    const shiftTime = coverageShiftTimes[shiftIndex % coverageShiftTimes.length];
     
     const randomEmployeeIndex = Math.floor(Math.random() * availableEmployees.length);
     const employee = availableEmployees[randomEmployeeIndex];
@@ -73,6 +77,7 @@ export function generateSchedule(employees: Employee[], previousSchedule?: Stati
     });
     
     availableEmployees.splice(randomEmployeeIndex, 1);
+    shiftIndex++; // Avança para o próximo horário na rotação
   }
 
   return schedule;

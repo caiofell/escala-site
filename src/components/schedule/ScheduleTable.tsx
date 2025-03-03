@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { StationShift } from "@/types/schedule";
@@ -37,46 +38,96 @@ export const ScheduleTable: React.FC<ScheduleTableProps> = ({
         </tr>
       </thead>
       <tbody>
-        {STATIONS.map((station) => (
-          <tr key={station}>
-            <td className="bg-navy text-white p-1 border border-gray-300 w-1/5 text-xs">
-              {station}
-            </td>
-            {SHIFT_TIMES[station].map((time, timeIndex) => {
-              const shift = schedule.find(
-                (s) =>
-                  s.station === station &&
-                  s.shiftTime.meal === time.meal &&
-                  s.shiftTime.interval === time.interval
-              );
-
-              return (
-                <td
-                  key={`${station}-${timeIndex}`}
-                  className="p-1 border border-gray-300 text-center"
-                >
-                  {shift?.employee && (
-                    <div className="flex flex-col items-center">
-                      <span className="font-bold text-xs">{shift.employee.name}</span>
-                      <span className={`${getMealTimeColor(shift.shiftTime.meal)} text-xs`}>
-                        JANTA {shift.shiftTime.meal}
-                      </span>
-                      <span className="text-xs">INTERVALO {shift.shiftTime.interval}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="mt-1 text-xs"
-                        onClick={() => onRemoveEmployee(schedule.indexOf(shift))}
-                      >
-                        Remover
-                      </Button>
-                    </div>
-                  )}
+        {STATIONS.map((station) => {
+          // Para COBERTURA, precisamos agrupar os funcionários por horário
+          if (station === "COBERTURA") {
+            return (
+              <tr key={station}>
+                <td className="bg-navy text-white p-1 border border-gray-300 w-1/5 text-xs">
+                  {station}
                 </td>
-              );
-            })}
-          </tr>
-        ))}
+                {SHIFT_TIMES[station].map((time, timeIndex) => {
+                  // Filtra todos os funcionários neste horário específico de COBERTURA
+                  const shiftsForThisTime = schedule.filter(
+                    (s) =>
+                      s.station === station &&
+                      s.shiftTime.meal === time.meal &&
+                      s.shiftTime.interval === time.interval
+                  );
+
+                  return (
+                    <td
+                      key={`${station}-${timeIndex}`}
+                      className="p-1 border border-gray-300 text-center"
+                    >
+                      <div className="flex flex-col gap-2">
+                        {shiftsForThisTime.map((shift, idx) => (
+                          <div key={`${station}-${timeIndex}-${idx}`} className="flex flex-col items-center border-b last:border-b-0 pb-2 last:pb-0">
+                            <span className="font-bold text-xs">{shift.employee?.name}</span>
+                            <span className={`${getMealTimeColor(shift.shiftTime.meal)} text-xs`}>
+                              JANTA {shift.shiftTime.meal}
+                            </span>
+                            <span className="text-xs">INTERVALO {shift.shiftTime.interval}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="mt-1 text-xs"
+                              onClick={() => onRemoveEmployee(schedule.indexOf(shift))}
+                            >
+                              Remover
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          } else {
+            // Comportamento normal para outros postos
+            return (
+              <tr key={station}>
+                <td className="bg-navy text-white p-1 border border-gray-300 w-1/5 text-xs">
+                  {station}
+                </td>
+                {SHIFT_TIMES[station].map((time, timeIndex) => {
+                  const shift = schedule.find(
+                    (s) =>
+                      s.station === station &&
+                      s.shiftTime.meal === time.meal &&
+                      s.shiftTime.interval === time.interval
+                  );
+
+                  return (
+                    <td
+                      key={`${station}-${timeIndex}`}
+                      className="p-1 border border-gray-300 text-center"
+                    >
+                      {shift?.employee && (
+                        <div className="flex flex-col items-center">
+                          <span className="font-bold text-xs">{shift.employee.name}</span>
+                          <span className={`${getMealTimeColor(shift.shiftTime.meal)} text-xs`}>
+                            JANTA {shift.shiftTime.meal}
+                          </span>
+                          <span className="text-xs">INTERVALO {shift.shiftTime.interval}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="mt-1 text-xs"
+                            onClick={() => onRemoveEmployee(schedule.indexOf(shift))}
+                          >
+                            Remover
+                          </Button>
+                        </div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          }
+        })}
       </tbody>
       <tfoot>
         <tr>
