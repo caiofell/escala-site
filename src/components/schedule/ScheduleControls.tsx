@@ -4,6 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 import html2pdf from "html2pdf.js";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ScheduleControlsProps {
   onGenerateSchedule: () => void;
@@ -16,6 +26,8 @@ export const ScheduleControls: React.FC<ScheduleControlsProps> = ({
   date,
   loading
 }) => {
+  const [showConfirmDialog, setShowConfirmDialog] = React.useState(false);
+
   const handleExportPDF = () => {
     const element = document.getElementById("schedule-table");
     if (!element) return;
@@ -43,14 +55,39 @@ export const ScheduleControls: React.FC<ScheduleControlsProps> = ({
   };
 
   return (
-    <div className="flex justify-between items-center">
-      <Button onClick={onGenerateSchedule} disabled={loading}>
-        {loading ? "Gerando..." : "Gerar Nova Escala"}
-      </Button>
-      <Button onClick={handleExportPDF} variant="outline" disabled={loading}>
-        <Download className="mr-2 h-4 w-4" />
-        Exportar PDF
-      </Button>
-    </div>
+    <>
+      <div className="flex justify-between items-center">
+        <Button onClick={() => setShowConfirmDialog(true)} disabled={loading}>
+          {loading ? "Gerando..." : "Gerar Nova Escala"}
+        </Button>
+        <Button onClick={handleExportPDF} variant="outline" disabled={loading}>
+          <Download className="mr-2 h-4 w-4" />
+          Exportar PDF
+        </Button>
+      </div>
+
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar nova escala</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja gerar uma nova escala? 
+              A escala atual será substituída.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                onGenerateSchedule();
+                setShowConfirmDialog(false);
+              }}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };

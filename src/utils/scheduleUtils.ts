@@ -33,6 +33,40 @@ export const SHIFT_TIMES: Record<string, { meal: string; interval: string }[]> =
   ],
 };
 
+// Local storage keys
+const SCHEDULE_STORAGE_KEY = 'schedule_data';
+const SCHEDULE_DATE_KEY = 'schedule_date';
+
+// Function to save schedule to local storage
+export function saveScheduleToStorage(schedule: StationShift[], date: Date): void {
+  try {
+    localStorage.setItem(SCHEDULE_STORAGE_KEY, JSON.stringify(schedule));
+    localStorage.setItem(SCHEDULE_DATE_KEY, date.toISOString());
+  } catch (error) {
+    console.error('Error saving schedule to local storage:', error);
+  }
+}
+
+// Function to load schedule from local storage
+export function loadScheduleFromStorage(): { schedule: StationShift[] | null, date: Date | null } {
+  try {
+    const scheduleData = localStorage.getItem(SCHEDULE_STORAGE_KEY);
+    const dateData = localStorage.getItem(SCHEDULE_DATE_KEY);
+    
+    if (!scheduleData || !dateData) {
+      return { schedule: null, date: null };
+    }
+    
+    return { 
+      schedule: JSON.parse(scheduleData),
+      date: new Date(dateData)
+    };
+  } catch (error) {
+    console.error('Error loading schedule from local storage:', error);
+    return { schedule: null, date: null };
+  }
+}
+
 export function generateSchedule(employees: Employee[], previousSchedule?: StationShift[]): StationShift[] {
   const availableEmployees = [...employees].filter(emp => emp.active);
   const schedule: StationShift[] = [];

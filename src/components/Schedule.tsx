@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { StationShift } from "@/types/schedule";
 import { STATIONS, SHIFT_TIMES } from "@/utils/scheduleUtils";
 import { ScheduleControls } from "./schedule/ScheduleControls";
@@ -11,10 +11,10 @@ import { useEmployeeManagement } from "@/hooks/useEmployeeManagement";
 import { useEmployeeActions } from "@/hooks/useEmployeeActions";
 
 export const Schedule: React.FC = () => {
-  const [date] = useState(new Date());
   const {
     schedule,
     loading: scheduleLoading,
+    currentDate,
     setSchedule,
     logSchedule,
     handleGenerateSchedule
@@ -54,7 +54,7 @@ export const Schedule: React.FC = () => {
       <div className="flex flex-col gap-4 mb-6">
         <ScheduleControls
           onGenerateSchedule={() => handleGenerateSchedule(employees)}
-          date={date}
+          date={currentDate}
           loading={scheduleLoading}
         />
 
@@ -88,7 +88,7 @@ export const Schedule: React.FC = () => {
 
       <div className="overflow-x-auto">
         <ScheduleTable
-          date={date}
+          date={currentDate}
           schedule={schedule}
           onRemoveEmployee={removeEmployee}
         />

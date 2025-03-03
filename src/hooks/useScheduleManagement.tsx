@@ -1,13 +1,29 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { StationShift, Employee } from "@/types/schedule";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { generateSchedule } from "@/utils/scheduleUtils";
+import { 
+  generateSchedule, 
+  saveScheduleToStorage, 
+  loadScheduleFromStorage 
+} from "@/utils/scheduleUtils";
 
 export const useScheduleManagement = () => {
   const [schedule, setSchedule] = useState<StationShift[]>([]);
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [loading, setLoading] = useState(false);
+
+  // Load saved schedule from local storage on initial render
+  useEffect(() => {
+    const { schedule: savedSchedule, date: savedDate } = loadScheduleFromStorage();
+    if (savedSchedule && savedSchedule.length > 0) {
+      setSchedule(savedSchedule);
+      if (savedDate) {
+        setCurrentDate(savedDate);
+      }
+    }
+  }, []);
 
   const logSchedule = async (scheduleData: StationShift[]) => {
     try {
@@ -45,8 +61,16 @@ export const useScheduleManagement = () => {
     try {
       setLoading(true);
       const newSchedule = generateSchedule(employees, schedule);
+      
+      // Save to local storage
+      saveScheduleToStorage(newSchedule, currentDate);
+      
+      // Update state
       setSchedule(newSchedule);
+      
+      // Save to database
       await logSchedule(newSchedule);
+      
       toast.success("Nova escala gerada com sucesso!");
     } catch (error) {
       console.error("Erro ao gerar escala:", error);
@@ -56,10 +80,17 @@ export const useScheduleManagement = () => {
     }
   };
 
+  // Custom update function that also updates local storage
+  const updateSchedule = (newSchedule: StationShift[]) => {
+    saveScheduleToStorage(newSchedule, currentDate);
+    setSchedule(newSchedule);
+  };
+
   return {
     schedule,
     loading,
-    setSchedule,
+    currentDate,
+    setSchedule: updateSchedule,
     logSchedule,
     handleGenerateSchedule
   };
